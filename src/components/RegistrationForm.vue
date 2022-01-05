@@ -1,10 +1,13 @@
 <template>
   <form class="form" @submit.prevent>
     <section class="section" v-if="currentStep == 1">
-      <h2 class="section__header">Форма клиента</h2>
+      <h2 class="section__header">Основные сведения</h2>
       <div class="section__wrapper">
         <div class="input-container">
-          <div class="error" v-if="signupErrors.includes('lastName')">
+          <div
+            class="error"
+            v-if="signupErrors && signupErrors.includes('lastName')"
+          >
             Введите фамилию
           </div>
           <labeled-input v-model="user.lastName" required
@@ -13,7 +16,10 @@
         </div>
 
         <div class="input-container">
-          <div class="error" v-if="signupErrors.includes('firstName')">
+          <div
+            class="error"
+            v-if="signupErrors && signupErrors.includes('firstName')"
+          >
             Введите имя
           </div>
           <labeled-input v-model="user.firstName" required>Имя</labeled-input>
@@ -21,13 +27,15 @@
         <labeled-input v-model="user.middleName">Отчество</labeled-input>
 
         <div class="input-container">
-          <div class="error" v-if="signupErrors.includes('birthDate')">
+          <div
+            class="error"
+            v-if="signupErrors && signupErrors.includes('birthDate')"
+          >
             Укажите дату рождения
           </div>
           <input
             class="input"
             v-model="user.birthDate"
-            required
             type="date"
             :min="minDate"
             :max="today"
@@ -38,7 +46,10 @@
         </div>
 
         <div class="input-container">
-          <div class="error" v-if="signupErrors.includes('phone')">
+          <div
+            class="error"
+            v-if="signupErrors && signupErrors.includes('phone')"
+          >
             Номер должен состоять из 11 цифр
           </div>
           <phone-input
@@ -61,26 +72,20 @@
         <div class="input-container">
           <div
             class="error"
-            v-if="user.clientGroups && signupErrors.includes('clientGroups')"
+            v-if="
+              user.clientGroups &&
+              signupErrors &&
+              signupErrors.includes('clientGroups')
+            "
           >
             Выберите хотя бы одну группу клиентов
           </div>
-          <div class="input-container row" v-if="user.clientGroups">
-            <div
-              class="label option"
-              v-for="group in user.clientGroups"
-              :key="group"
-              @click="deleteOption"
-            >
-              {{ group }}
-            </div>
-          </div>
-          <select v-model="user.group" @change="addSelected" class="input">
-            <option value="" disabled selected>Выбрать...</option>
-            <option value="VIP">VIP</option>
-            <option value="Проблемные">Проблемные</option>
-            <option value="ОМС">ОМС</option>
-          </select>
+
+          <drop-down
+            @updateGroups="handleDropdown"
+            :options="['VIP', 'Проблемные', 'ОМС']"
+          ></drop-down>
+
           <label class="label">Группа клиентов</label>
         </div>
 
@@ -100,7 +105,7 @@
       </div>
     </section>
 
-    <section class="section" v-if="!this.v$.$error && currentStep == 2">
+    <section class="section" v-if="currentStep == 2">
       <h2 class="section__header">Адрес</h2>
       <div class="section__wrapper">
         <labeled-input type="number" v-model="user.address.zip"
@@ -108,20 +113,45 @@
         >
         <labeled-input v-model="user.address.country">Страна</labeled-input>
         <labeled-input v-model="user.address.state">Область</labeled-input>
-        <labeled-input v-model="user.address.city" required
-          >Город</labeled-input
-        >
+
+        <div class="input-container">
+          <div
+            class="error"
+            v-if="signupErrors && signupErrors.includes('city')"
+          >
+            Укажите город
+          </div>
+          <labeled-input v-model="user.address.city" required
+            >Город</labeled-input
+          >
+        </div>
         <labeled-input v-model="user.address.street">Улица</labeled-input>
         <labeled-input v-model="user.address.building">Дом</labeled-input>
       </div>
     </section>
 
-    <section class="section" v-if="!this.v$.$error && currentStep == 3">
+    <section class="section" v-if="currentStep == 3">
       <h2 class="section__header">Документы</h2>
       <div class="section__wrapper">
-        <labeled-input v-model="user.identityDocument.type" required
-          >Тип документа</labeled-input
-        >
+        <div class="input-container">
+          <div
+            class="error"
+            v-if="signupErrors && signupErrors.includes('type')"
+          >
+            Укажите документ
+          </div>
+
+          <select v-model="user.identityDocument.type">
+            <option value="" disabled selected>Выбрать...</option>
+            <option value="passport">Паспорт</option>
+            <option value="birthCerificate">Свидетельство о рождении</option>
+            <option value="driverLicense">Водительское удостоверение</option>
+          </select>
+          <label class="label" >Тип документа<span class="required">*</span></label>
+        </div>
+        <div class="input-container row">
+        </div>
+
         <labeled-input v-model="user.identityDocument.series"
           >Серия</labeled-input
         >
@@ -131,30 +161,55 @@
         <labeled-input v-model="user.identityDocument.authority"
           >Кем выдан</labeled-input
         >
-        <labeled-input v-model="user.identityDocument.dateOfIssue" required
-          >Дата выдачи</labeled-input
-        >
+        <div class="input-container">
+          <div
+            class="error"
+            v-if="signupErrors && signupErrors.includes('dateOfIssue')"
+          >
+            Укажите дату выдачи документа
+          </div>
+          <input
+            class="input"
+            v-model="user.identityDocument.dateOfIssue"
+            type="date"
+            :min="minDate"
+            :max="today"
+          />
+          <label class="label"
+            >Дата выдачи<span class="required">*</span></label
+          >
+        </div>
       </div>
     </section>
 
-    <button
-      class="btn"
-      @click.prevent="goBack"
-      v-if="currentStep > 1 && currentStep <= lastStep"
-    >
-      Назад
-    </button>
-    <button class="btn" @click.prevent="goNext" v-if="currentStep < lastStep">
-      Далее
-    </button>
-    <button class="btn" @click="createUser" v-if="currentStep == lastStep">
-      Подтвердить
-    </button>
+    <div class="buttons">
+      <button
+        class="btn"
+        @click.prevent="goBack"
+        v-if="currentStep > 1 && currentStep <= lastStep"
+      >
+        Назад
+      </button>
+      <button class="btn" @click.prevent="goNext" v-if="currentStep < lastStep">
+        Далее
+      </button>
+      <button class="btn" @click="createUser" v-if="currentStep == lastStep">
+        Подтвердить
+      </button>
+    </div>
   </form>
+
+  <div class="bg" ref="bgRef"></div>
+  <div class="dialog" ref="dialogRef">
+    <check-img />
+    <h3>Пользователь зарегистрирован</h3>
+  </div>
 </template>
 <script>
 import useVuelidate from "@vuelidate/core";
-import { required, minLength } from "@vuelidate/validators";
+import { minLength, required } from "@vuelidate/validators";
+import DropDown from "@/components/DropDown.vue";
+import CheckImg from "@/assets/CheckImg.vue";
 
 const currentDay = `${new Intl.DateTimeFormat("ru-RU", "default").format(
   new Date(Date.now())
@@ -165,6 +220,7 @@ const currentDay = `${new Intl.DateTimeFormat("ru-RU", "default").format(
 
 export default {
   name: "registration-form",
+  components: { DropDown, CheckImg },
   setup() {
     return { v$: useVuelidate() };
   },
@@ -201,11 +257,6 @@ export default {
       currentStep: 1,
       lastStep: 3,
       signupErrors: [],
-      options: {
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-      },
       today: currentDay,
       minDate: "1900-01-01",
     };
@@ -221,12 +272,22 @@ export default {
           required,
         },
         clientGroups: { required },
+        address: {
+          city: { required },
+        },
+        identityDocument: {
+          type: { required },
+          dateOfIssue: { required },
+        },
       },
     };
   },
   methods: {
     createUser() {
       this.v$.$validate();
+      this.v$.$errors.forEach((error) => {
+        this.signupErrors.push(error.$property);
+      });
       if (this.v$.$error) return;
       const newUser = {
         id: Date.now(),
@@ -287,31 +348,46 @@ export default {
           dateOfIssue: "",
         },
       };
+
+      /* Success message show */
+      this.$refs.bgRef.classList.add("show");
+      this.$refs.dialogRef.classList.add("show");
+
+      setTimeout(() => {
+        this.$refs.bgRef.classList.remove("show");
+        this.$refs.dialogRef.classList.remove("show");
+      }, 2500);
     },
 
     addSelected(e) {
-      console.log(e.target.value);
       if (!this.user.clientGroups.includes(e.target.value)) {
         this.user.clientGroups.push(e.target.value);
       }
     },
-    deleteOption(e) {
-      const option = e.target.textContent;
-      const index = this.user.clientGroups.indexOf(option);
-      this.user.clientGroups.splice(index, 1);
-    },
+
     goNext() {
       this.v$.$validate();
-      if (!this.v$.$error) {
-        this.currentStep++;
-      }
       this.signupErrors = [];
+
       this.v$.$errors.forEach((error) => {
         this.signupErrors.push(error.$property);
       });
+
+      if (this.currentStep == 1 && this.signupErrors.length < 4) {
+        this.currentStep++;
+        this.signupErrors = [];
+        return;
+      } else if (this.currentStep == 2 && this.signupErrors.length < 3) {
+        this.signupErrors = [];
+        this.currentStep++;
+      }
     },
+
     goBack() {
       this.currentStep--;
+    },
+    handleDropdown(value) {
+      this.user.clientGroups = value;
     },
   },
 };
@@ -321,6 +397,8 @@ export default {
 @import "@/assets/variables";
 
 .form {
+  display: flex;
+  flex-direction: column;
   width: 50%;
   max-width: 800px;
   background: white;
@@ -357,16 +435,6 @@ export default {
     align-self: flex-start;
   }
 
-  .label.option {
-    background: $blue;
-    color: $white;
-    padding: 5px 6px;
-    margin: 10px 10px 0px 0px;
-
-    border-radius: 15px;
-    cursor: pointer;
-  }
-
   .input-container {
     display: flex;
     flex-direction: column-reverse;
@@ -374,11 +442,15 @@ export default {
     width: 100%;
     margin: 0;
     align-self: start;
+    position: relative;
   }
   .input-container.row {
     flex-direction: row-reverse;
     justify-content: flex-end;
     align-self: start;
+  }
+  .dropdown {
+    position: absolute;
   }
 
   .input,
@@ -405,12 +477,16 @@ export default {
   .input.checkbox {
     width: 20px;
     height: 20px;
-    margin: 10px 2px 0 15px;
+    margin: 0px 2px 10px 25px;
+    cursor: pointer;
   }
   .label.checkbox {
-    margin-top: 10px;
+    margin-top: 0;
+    margin-bottom: 10px;
   }
-
+  .buttons {
+    float: left;
+  }
   .btn {
     margin: 30px 10px 0 0;
     background-color: $blue;
@@ -433,6 +509,39 @@ export default {
     margin-bottom: -15px;
     margin-top: 5px;
   }
+}
+.bg {
+  display: none;
+  position: absolute;
+  min-width: 200vw;
+  min-height: 200vh;
+}
+.bg.show {
+  display: block;
+  background: rgba(0, 0, 0, 0.201);
+}
+.dialog {
+  margin: 20px 20px;
+  padding: 30px;
+  text-align: center;
+  align-items: center;
+  justify-content: spa;
+  display: flex;
+  flex-direction: column;
+  top: -100px;
+  opacity: 0;
+  background-color: white;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 15px;
+  z-index: 1002;
+  position: absolute;
+
+  transition: all 400ms ease;
+}
+
+.dialog.show {
+  top: 40px;
+  opacity: 1;
 }
 
 @media (max-width: 1390px) {
